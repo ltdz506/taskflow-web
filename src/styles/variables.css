@@ -1,0 +1,51 @@
+:root {
+  color-scheme: dark;
+
+  /* 背景 */
+  --bg: #07090d;
+
+  /* 环境光（蓝 / 紫 / 中心柔光，来自 Pixso 设计稿） */
+  --glow-blue: rgba(39, 119, 255, 0.18);
+  --glow-purple: rgba(139, 92, 246, 0.14);
+  --glow-center: rgba(86, 185, 255, 0.16);
+
+  /* 玻璃面板 */
+  --panel-bg: rgba(16, 20, 27, 0.78);
+  --panel-border: rgba(255, 255, 255, 0.1);
+
+  /* 文字（由亮到暗四级） */
+  --text-1: #f7f9fc;
+  --text-2: #929cab;
+  --text-3: #687384;
+  --text-4: #596273;
+
+  /* 输入框 */
+  --input-bg: rgba(10, 13, 18, 0.92);
+  --input-border: rgba(175, 203, 255, 0.18);
+  --input-placeholder: #667181;
+
+  /* 主按钮（白底黑字） */
+  --btn-bg: #f4f7fb;
+  --btn-text: #0a0d12;
+  --btn-icon-bg: #0b0e13;
+
+  /* 强调色 */
+  --accent-blue: #2777ff;
+  --accent-dot: #69a7ff;
+
+  /* 状态色（与 PRD 约定一致） */
+  --c-edit: #a88bff;
+  --c-run: #6fa8ff;
+  --c-done: #6cdf9c;
+  --c-danger: #ff7c87;
+  --c-wait: #e5b567;
+
+  /* 圆角 */
+  --radius-lg: 32px;
+  --radius-md: 16px;
+  --radius-sm: 11px;
+
+  /* 字体：Inter（拉丁）+ 思源黑体 / 系统中文 */
+  --font-sans: 'Inter', 'Source Han Sans CN', 'Noto Sans SC', 'PingFang SC',
+    'Microsoft YaHei', system-ui, -apple-system, sans-serif;
+}
