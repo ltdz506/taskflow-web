@@ -1,4 +1,4 @@
-import { computed, ref, shallowRef } from 'vue'
+import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { createRealtime } from '@/api/ws'
 import { getTaskflowDetail, getTaskflows } from '@/api/taskflow'
@@ -23,7 +23,9 @@ export const useTaskflowStore = defineStore('taskflow', () => {
 
   /* ---------------- 详情 ---------------- */
   const selectedId = ref<string | null>(null)
-  const detail = shallowRef<TaskflowDetail | null>(null)
+  // 必须是深度响应式：WebSocket 事件会直接改 taskAndResponses 里的嵌套对象，
+  // shallowRef 下这些修改不会触发渲染，气泡就不会实时冒出来
+  const detail = ref<TaskflowDetail | null>(null)
   const detailLoading = ref(false)
   const detailError = ref('')
 
@@ -40,6 +42,19 @@ export const useTaskflowStore = defineStore('taskflow', () => {
   /* ---------------- 实时连接 ---------------- */
   const connected = ref(false)
   let realtime: { close: () => void } | null = null
+  let detailRefreshTimer: number | undefined
+
+  /**
+   * 兜底刷新：本地补丁打不上时（详情还没加载完、任务找不到、或状态变化缺少上下文），
+   * 合并 400ms 后重拉一次详情，保证界面最终与服务端一致。
+   */
+  function scheduleDetailRefresh(taskflowId: string): void {
+    if (selectedId.value !== taskflowId) return
+    window.clearTimeout(detailRefreshTimer)
+    detailRefreshTimer = window.setTimeout(() => {
+      void refreshDetailQuietly()
+    }, 400)
+  }
 
   async function loadList(targetPage = page.value): Promise<void> {
     listLoading.value = true
@@ -67,19 +82,22 @@ export const useTaskflowStore = defineStore('taskflow', () => {
     }
   }
 
+  /** 后端在任务没有附件时不会返回 assets 字段，这里补齐，避免模板取值报错 */
+  function normalizeDetail(data: TaskflowDetail): TaskflowDetail {
+    for (const item of data.taskAndResponses ?? []) {
+      item.task.assets = item.task.assets ?? []
+      if (item.response) item.response.assets = item.response.assets ?? []
+    }
+    return data
+  }
+
   async function select(id: string): Promise<void> {
     selectedId.value = id
     detail.value = null
     detailError.value = ''
     detailLoading.value = true
     try {
-      const data = await getTaskflowDetail(id)
-      // 后端在任务没有附件时不会返回 assets 字段，这里补齐，避免模板取值报错
-      for (const item of data.taskAndResponses ?? []) {
-        item.task.assets = item.task.assets ?? []
-        if (item.response) item.response.assets = item.response.assets ?? []
-      }
-      detail.value = data
+      detail.value = normalizeDetail(await getTaskflowDetail(id))
     } catch (error) {
       detailError.value = error instanceof Error ? error.message : '任务流详情加载失败'
     } finally {
@@ -89,6 +107,21 @@ export const useTaskflowStore = defineStore('taskflow', () => {
 
   async function reloadDetail(): Promise<void> {
     if (selectedId.value !== null) await select(selectedId.value)
+  }
+
+  /**
+   * 静默刷新：保留当前对话内容，拉到新数据后再整体替换。
+   * 用于 WebSocket 事件的兜底校准，避免对话区闪一下「正在加载」。
+   */
+  async function refreshDetailQuietly(): Promise<void> {
+    const id = selectedId.value
+    if (id === null) return
+    try {
+      const data = normalizeDetail(await getTaskflowDetail(id))
+      if (selectedId.value === id) detail.value = data
+    } catch {
+      // 静默失败，等下一次事件或用户手动重试
+    }
   }
 
   /** 在列表里就地更新一条任务流的状态（WebSocket 用，避免整表重拉） */
@@ -103,19 +136,35 @@ export const useTaskflowStore = defineStore('taskflow', () => {
     const taskflowId = data.taskflowId
     if (!taskflowId) return
 
+    // ---- 任务流级事件：只更新列表里的状态，不带 taskId，不能再往下走任务匹配 ----
     if (message.event === 'taskflow.started') {
       patchSummary(taskflowId, { status: 'RUNNING', startTime: data.startTime ?? null })
-    } else if (message.event === 'taskflow.completed') {
+      return
+    }
+    if (message.event === 'taskflow.completed') {
       patchSummary(taskflowId, { status: 'COMPLETED', endTime: data.endTime ?? null })
-    } else if (message.event === 'taskflow.destroyed') {
+      scheduleDetailRefresh(taskflowId)
+      return
+    }
+    if (message.event === 'taskflow.destroyed') {
       patchSummary(taskflowId, { status: 'DESTROYED', endTime: data.endTime ?? null })
+      scheduleDetailRefresh(taskflowId)
+      return
     }
 
+    // ---- 以下都是任务级事件（task.running / task.responded / asset.added）----
     const current = detail.value
-    if (!current || current.taskflowId !== taskflowId) return
+    if (!current || current.taskflowId !== taskflowId || !data.taskId) {
+      // 详情还没加载完、或推送的不是当前选中的任务流：稍后校准一次
+      scheduleDetailRefresh(taskflowId)
+      return
+    }
 
     const target = current.taskAndResponses.find(({ task }) => task.id === data.taskId)
-    if (!target) return
+    if (!target) {
+      scheduleDetailRefresh(taskflowId)
+      return
+    }
 
     if (message.event === 'task.running') {
       target.task.status = 'RUNNING'
@@ -132,6 +181,7 @@ export const useTaskflowStore = defineStore('taskflow', () => {
             assets: [],
           }
       if (data.respTime) reply.respTime = data.respTime
+      // 直接替换对象即可触发渲染（detail 是深度响应式）
       target.response = reply
     } else if (message.event === 'asset.added' && data.asset) {
       const asset: AssetItem = {
@@ -171,6 +221,7 @@ export const useTaskflowStore = defineStore('taskflow', () => {
   }
 
   function disconnectRealtime(): void {
+    window.clearTimeout(detailRefreshTimer)
     realtime?.close()
     realtime = null
     connected.value = false

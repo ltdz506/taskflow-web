@@ -1,5 +1,6 @@
 import router from '@/router'
 import { clearToken, getToken } from '@/utils/token'
+import { parseJson } from '@/utils/json'
 import type { ApiResponse } from '@/types/api'
 
 /** 后端地址：默认同源；联调时可通过环境变量 VITE_API_BASE_URL 指向后端 */
@@ -24,58 +25,6 @@ function handleUnauthorized(): never {
   clearToken()
   void router.replace({ name: 'login' })
   throw new ApiError('登录已过期，请重新登录', 401)
-}
-
-/**
- * 后端主键是 19 位长整型（如 3760072027503855231），超出 Number.MAX_SAFE_INTEGER，
- * 直接 JSON.parse 会被四舍五入成错误的值。这里在解析前把「字符串外的超长整数」加上引号。
- */
-export function quoteBigIntegers(text: string): string {
-  let out = ''
-  let i = 0
-  let inString = false
-
-  while (i < text.length) {
-    const ch = text[i] as string
-    if (inString) {
-      out += ch
-      if (ch === '\\') {
-        out += text[i + 1] ?? ''
-        i += 2
-        continue
-      }
-      if (ch === '"') inString = false
-      i += 1
-      continue
-    }
-    if (ch === '"') {
-      inString = true
-      out += ch
-      i += 1
-      continue
-    }
-    if (ch === '-' || (ch >= '0' && ch <= '9')) {
-      let end = i
-      if (text[end] === '-') end += 1
-      while (end < text.length && text.charCodeAt(end) >= 48 && text.charCodeAt(end) <= 57) end += 1
-      const raw = text.slice(i, end)
-      if (Math.abs(Number(raw)) > Number.MAX_SAFE_INTEGER) {
-        out += `"${raw}"`
-      } else {
-        out += raw
-      }
-      i = end
-      continue
-    }
-    out += ch
-    i += 1
-  }
-  return out
-}
-
-/** 解析响应体（保留超长整型精度） */
-function parseJson<T>(text: string): T {
-  return JSON.parse(quoteBigIntegers(text)) as T
 }
 
 /** 发请求并挂上 Bearer token；网络异常统一转成可读错误 */

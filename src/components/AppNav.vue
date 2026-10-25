@@ -13,10 +13,7 @@ const NAV_ITEMS = [
   { name: 'settings', label: '设置', width: 138 },
 ] as const
 
-const activeIndex = computed(() => {
-  const index = NAV_ITEMS.findIndex((item) => item.name === route.name)
-  return index < 0 ? 0 : index
-})
+const activeIndex = computed(() => NAV_ITEMS.findIndex((item) => item.name === route.name))
 
 /** 滑块的位置 = 左内边距 + 前面所有项宽度；宽度跟随当前项 */
 const pillStyle = computed(() => {
@@ -44,7 +41,8 @@ const userName = computed(() => user.profile?.userName ?? 'Taskflow')
     </div>
 
     <nav class="nav-switch" aria-label="主导航">
-      <span class="nav-pill" :style="pillStyle" aria-hidden="true" />
+      <!-- 路由未匹配到导航项时不渲染滑块，避免它先落在第一项再滑过去 -->
+      <span v-if="activeIndex >= 0" class="nav-pill" :style="pillStyle" aria-hidden="true" />
       <button
         v-for="item in NAV_ITEMS"
         :key="item.name"

@@ -1,4 +1,5 @@
 import type { RealtimeMessage } from '@/types/models'
+import { parseJson } from '@/utils/json'
 
 interface RealtimeOptions {
   token: string
@@ -39,7 +40,8 @@ export function createRealtime(options: RealtimeOptions): { close: () => void } 
 
     socket.onmessage = (event) => {
       try {
-        options.onMessage(JSON.parse(String(event.data)) as RealtimeMessage)
+        // 与 HTTP 响应一样必须走长整型保护，否则 taskflowId/taskId 会被四舍五入
+        options.onMessage(parseJson<RealtimeMessage>(String(event.data)))
       } catch {
         // 非 JSON 消息直接忽略，不影响连接
       }
