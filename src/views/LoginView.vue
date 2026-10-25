@@ -42,11 +42,16 @@ async function handleSubmit() {
 
     <main class="login-panel">
       <div class="key-badge">
-        <svg viewBox="0 0 80 80" width="46" height="46" fill="none" aria-hidden="true">
-          <circle cx="31" cy="33" r="10" stroke="#d7e8ff" stroke-width="4" />
-          <rect x="41" y="31" width="22" height="5" rx="2.5" fill="#d7e8ff" />
-          <rect x="48" y="32" width="5" height="8" rx="2.5" fill="#d7e8ff" />
-          <rect x="55" y="32" width="5" height="11" rx="2.5" fill="#d7e8ff" />
+        <!--
+          按设计稿原始尺寸重建：环外径 28、杆 22×5、齿 5×11 与 5×8。
+          画布取图形外框 46×28 再四周各留 2px → viewBox 中心与图形中心重合，
+          由 80×80 徽章的 grid 居中，横竖都不会再偏。
+        -->
+        <svg viewBox="-2 -2 50 32" width="50" height="32" fill="none" aria-hidden="true">
+          <circle cx="14" cy="14" r="12" stroke="#d7e8ff" stroke-width="4" />
+          <rect x="24" y="12" width="22" height="5" rx="2" fill="#d7e8ff" />
+          <rect x="31" y="13" width="5" height="8" rx="2" fill="#d7e8ff" />
+          <rect x="38" y="13" width="5" height="11" rx="2" fill="#d7e8ff" />
         </svg>
       </div>
 
@@ -255,6 +260,8 @@ async function handleSubmit() {
 }
 
 .field input:focus {
+  /* 用设计稿的浅蓝描边 + 柔光代替浏览器默认的白框 */
+  outline: none;
   border-color: rgba(175, 203, 255, 0.45);
   box-shadow:
     inset 0 2px 6px rgba(0, 0, 0, 0.35),
