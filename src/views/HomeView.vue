@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import AppNav from '@/components/AppNav.vue'
 import { useUserStore } from '@/stores/user'
 
 const user = useUserStore()
@@ -23,13 +22,11 @@ onMounted(() => {
 
 <template>
   <div class="home">
-    <AppNav />
-
     <main class="home-main">
       <div class="quote-block">
         <p class="quote-tag">
           <span class="tag-dot" aria-hidden="true" />
-          来自首页接口 · 每日一句
+          每日一句
         </p>
 
         <span class="quote-mark" aria-hidden="true">“</span>
@@ -54,10 +51,11 @@ onMounted(() => {
 <style scoped>
 .home {
   position: relative;
-  min-height: 100vh;
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 38px 72px 72px;
+  padding: 0 72px 72px;
 }
 
 .home-main {
@@ -157,7 +155,7 @@ onMounted(() => {
 
 @media (max-width: 1180px) {
   .home {
-    padding: 32px 32px 40px;
+    padding: 0 32px 40px;
   }
 
   .headline {

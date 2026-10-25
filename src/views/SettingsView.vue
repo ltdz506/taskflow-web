@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import AppNav from '@/components/AppNav.vue'
+import AppSelect from '@/components/AppSelect.vue'
 import { useConfigStore, parseConfigValue } from '@/stores/config'
 import { useToast } from '@/composables/useToast'
 import type { ConfigItem } from '@/types/models'
@@ -54,6 +54,11 @@ function optionLabel(item: ConfigItem, option: string): string {
   return `${option}${unit}`
 }
 
+/** 给 AppSelect 用的选项列表 */
+function optionsOf(item: ConfigItem): Array<{ value: string; label: string }> {
+  return parsed(item).choose.map((option) => ({ value: option, label: optionLabel(item, option) }))
+}
+
 function sync(): void {
   for (const item of config.items) {
     const value = parsed(item).value
@@ -94,8 +99,6 @@ onMounted(async () => {
 
 <template>
   <div class="page">
-    <AppNav />
-
     <header class="page-head">
       <h1 class="page-title">设置</h1>
       <p class="page-desc">管理 Agent 行为、通知、安全与界面偏好</p>
@@ -134,14 +137,11 @@ onMounted(async () => {
 
           <div class="row-control">
             <template v-if="parsed(item).type === 'SELECT'">
-              <label class="select">
-                <select v-model="draft[item.id]">
-                  <option v-for="option in parsed(item).choose" :key="option" :value="option">
-                    {{ optionLabel(item, option) }}
-                  </option>
-                </select>
-                <span class="select-arrow" aria-hidden="true">▼</span>
-              </label>
+              <AppSelect
+                :model-value="draft[item.id] ?? ''"
+                :options="optionsOf(item)"
+                @update:model-value="draft[item.id] = $event"
+              />
             </template>
 
             <template v-else-if="parsed(item).type === 'SWITCH'">
@@ -194,11 +194,11 @@ onMounted(async () => {
 
 <style scoped>
 .page {
-  height: 100vh;
-  min-height: 680px;
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 38px 72px 72px;
+  padding: 0 72px 72px;
 }
 
 .page-head {
@@ -262,7 +262,7 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: 13.2px;
   color: #83909f;
 }
 
@@ -278,11 +278,11 @@ onMounted(async () => {
 }
 
 .save-btn {
-  height: 32px;
-  padding: 0 16px;
+  height: 34px;
+  padding: 0 18px;
   border-radius: 11px;
   background: #f4f7fb;
-  font-size: 12px;
+  font-size: 14.4px;
   font-weight: 500;
   color: #0a0d12;
   transition: opacity 0.2s ease;
@@ -334,15 +334,15 @@ onMounted(async () => {
 }
 
 .row-name {
-  font-size: 13px;
+  font-size: 15.6px;
   font-weight: 500;
   line-height: 20px;
   color: #d8dee7;
 }
 
 .row-desc {
-  margin-top: 1px;
-  font-size: 10px;
+  margin-top: 2px;
+  font-size: 12px;
   line-height: 18px;
   color: #677383;
 }
@@ -351,53 +351,20 @@ onMounted(async () => {
   flex: none;
 }
 
-.select,
 .text-field {
   position: relative;
-  display: block;
+  display: flex;
+  align-items: center;
+  width: 192px;
   height: 38px;
   border-radius: 12px;
   background: rgba(8, 12, 17, 0.76);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: border-color 0.2s ease;
 }
 
-.select {
-  width: 192px;
-}
-
-.select select {
-  appearance: none;
-  width: 100%;
-  height: 100%;
-  padding: 0 34px 0 16px;
-  border: none;
-  background: transparent;
-  font-size: 12px;
-  font-weight: 500;
-  color: #b8c2cf;
-  outline: none;
-  cursor: pointer;
-}
-
-.select select option {
-  background: #10151c;
-  color: #dfe6ef;
-}
-
-.select-arrow {
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 8px;
-  color: #697585;
-  pointer-events: none;
-}
-
-.text-field {
-  width: 192px;
-  display: flex;
-  align-items: center;
+.text-field:focus-within {
+  border-color: rgba(140, 184, 255, 0.42);
 }
 
 .text-field input {
@@ -407,7 +374,7 @@ onMounted(async () => {
   padding: 0 0 0 16px;
   border: none;
   background: transparent;
-  font-size: 12px;
+  font-size: 14.4px;
   font-weight: 500;
   color: #b8c2cf;
   outline: none;
@@ -416,7 +383,7 @@ onMounted(async () => {
 .text-unit {
   flex: none;
   padding-right: 14px;
-  font-size: 11px;
+  font-size: 13.2px;
   color: #697585;
 }
 
@@ -502,7 +469,7 @@ onMounted(async () => {
 
 @media (max-width: 1180px) {
   .page {
-    padding: 32px 32px 40px;
+    padding: 0 32px 40px;
   }
 }
 </style>

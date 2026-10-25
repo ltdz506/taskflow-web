@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import AppNav from '@/components/AppNav.vue'
 import TaskflowList from './taskflow/TaskflowList.vue'
 import TaskflowDetail from './taskflow/TaskflowDetail.vue'
 import CreateTaskflowModal from './taskflow/CreateTaskflowModal.vue'
@@ -19,8 +18,6 @@ async function onCreated(taskflowId: string): Promise<void> {
 
 <template>
   <div class="page">
-    <AppNav />
-
     <header class="page-head">
       <div class="head-text">
         <h1 class="page-title">AI 任务</h1>
@@ -43,11 +40,11 @@ async function onCreated(taskflowId: string): Promise<void> {
 
 <style scoped>
 .page {
-  height: 100vh;
-  min-height: 680px;
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 38px 72px 72px;
+  padding: 0 72px 72px;
 }
 
 .page-head {
@@ -116,7 +113,7 @@ async function onCreated(taskflowId: string): Promise<void> {
 
 @media (max-width: 1180px) {
   .page {
-    padding: 32px 32px 40px;
+    padding: 0 32px 40px;
   }
 
   .workbench {

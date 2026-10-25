@@ -129,9 +129,10 @@ const userName = computed(() => user.profile?.userName ?? 'Taskflow')
   height: 36px;
   border-radius: 13px;
   background: rgba(255, 255, 255, 0.13);
+  /* 先加速、后减速的 S 形曲线，接近 iOS 分段控件的滑动手感 */
   transition:
-    left 0.36s cubic-bezier(0.22, 0.61, 0.36, 1),
-    width 0.36s cubic-bezier(0.22, 0.61, 0.36, 1);
+    left 0.48s cubic-bezier(0.65, 0, 0.35, 1),
+    width 0.48s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 .nav-item {
