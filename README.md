@@ -1,42 +1,26 @@
-# taskflow-web
+# Taskflow · 前端
 
-This template should help get you started developing with Vue 3 in Vite.
+Taskflow 是一个「AI Agent 任务队列」个人网站的前端。你可以把一段工作拆成若干任务，按顺序组成一条**任务流**交给 AI Agent 执行；这个站点负责把整条流水线的每一步实时呈现出来。
 
-## Recommended IDE Setup
+## 它在做什么
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- **建任务流**：填写标题与初始要求，再逐个添加后续任务，任务可挂附件
+- **看执行过程**：左侧是任务流列表，右侧以对话形式展示「你的要求 → Agent 的回复」，产物以文件卡片直接下载
+- **实时跟进**：通过 WebSocket 接收 Agent 的每一步动作，状态标签、对话气泡与单轮倒计时自动更新，无需刷新页面
+- **调设置**：Agent 单轮超时、任务数上限、附件数与保留期限等，均由服务端下发配置
 
-## Recommended Browser Setup
+## 技术栈
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+Vue 3 + TypeScript + Vite + Pinia + Vue Router，请求层是对原生 `fetch` 的封装。
 
-## Type Support for `.vue` Imports in TS
+## 本地运行
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+需要 Node 22.18+ 或 24.12+。
 
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
+```bash
 npm install
+npm run dev      # 开发服务器 http://localhost:5173
+npm run build    # 类型检查 + 生产构建
 ```
 
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Type-Check, Compile and Minify for Production
-
-```sh
-npm run build
-```
+先启动后端服务，再用访问密钥登录即可进入。
